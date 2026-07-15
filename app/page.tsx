@@ -7,7 +7,7 @@ import type { AppState } from "@/lib/event-types";
 
 const initialState: AppState = {
   status: "idle",
-  message: "Drop screenshots, flyers, or notes to extract events.",
+  message: "Drop images or paste notes to extract events.",
   summary: "",
   timezone: "UTC",
   extractedEvents: [],
@@ -17,6 +17,7 @@ const initialState: AppState = {
 export default function Home() {
   const [state, formAction, pending] = useActionState(ingestEvents, initialState);
   const [files, setFiles] = useState<File[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const syncFiles = (nextFiles: File[]) => {
@@ -30,7 +31,7 @@ export default function Home() {
     }
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     syncFiles(Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/")));
   };
@@ -39,238 +40,297 @@ export default function Home() {
     syncFiles(Array.from(event.currentTarget.files ?? []));
   };
 
+  const removeFile = (indexToRemove: number) => {
+    syncFiles(files.filter((_, idx) => idx !== indexToRemove));
+  };
+
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-7xl flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[#07111f]/90 shadow-[0_30px_120px_rgba(3,8,20,0.45)] backdrop-blur">
-        <div className="grid flex-1 gap-0 lg:grid-cols-[1.4fr_0.9fr]">
-          <section className="relative overflow-hidden border-b border-white/10 px-6 py-8 sm:px-10 sm:py-10 lg:border-b-0 lg:border-r">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,103,255,0.2),transparent_28%),radial-gradient(circle_at_80%_20%,rgba(0,255,209,0.12),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
-            <div className="relative flex h-full flex-col gap-8">
-              <div className="max-w-2xl space-y-4">
-                <p className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
-                  Loopin planner
-                </p>
-                <h1 className="max-w-xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                  Turn messy notes, flyers, and screenshots into calendar events.
-                </h1>
-                <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                  A simple, free, OSS Next app that sends your uploads to Groq for extraction, then pushes the structured events into a Google Calendar you control.
-                </p>
-              </div>
+    <main className="min-h-screen bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-600">
+      <form action={formAction} className="mx-auto max-w-4xl px-4 py-8 sm:px-6 md:py-16">
+        {/* Header / Top Bar */}
+        <header className="relative flex items-center justify-between pb-8">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold tracking-tight text-blue-600">loopin</span>
+            <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
+              v1.0
+            </span>
+          </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                {[
-                  ["1", "Drop screenshots or paste text"],
-                  ["2", "Groq extracts event details"],
-                  ["3", "Syncs to your connected calendar"],
-                ].map(([step, label]) => (
-                  <div key={step} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-sm font-semibold text-cyan-200">Step {step}</div>
-                    <div className="mt-2 text-sm leading-6 text-slate-300">{label}</div>
-                  </div>
-                ))}
-              </div>
+          {/* Connector Button in the Corner */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowSettings(!showSettings)}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-blue-600 active:scale-95"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-plug"
+              >
+                <path d="M12 2v8" />
+                <path d="M16.2 9.5 12 14 7.8 9.5" />
+                <path d="m18 12-2.5 7.5a2 2 0 0 1-2 1.5h-3a2 2 0 0 1-2-1.5L6 12" />
+                <path d="M12 22v-3" />
+              </svg>
+              <span>Connect</span>
+            </button>
 
-              <form action={formAction} className="space-y-6">
-                <label
-                  htmlFor="images"
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={handleDrop}
-                  className="group block cursor-pointer rounded-[28px] border border-dashed border-cyan-300/25 bg-white/5 p-6 transition hover:border-cyan-200/60 hover:bg-white/[0.07]"
-                >
-                  <input
-                    ref={inputRef}
-                    id="images"
-                    name="images"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="sr-only"
-                    onChange={handleFileChange}
-                  />
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-lg font-medium text-white">Drop images here</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-400">
-                        Flyers, screenshots, whiteboards, receipts, or event posters. Up to 3 files.
-                      </p>
-                    </div>
-                    <span className="inline-flex items-center rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-sm font-medium text-slate-200">
-                      Choose files
-                    </span>
-                  </div>
-                  {files.length > 0 ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {files.map((file) => (
-                        <span
-                          key={`${file.name}-${file.lastModified}`}
-                          className="rounded-full border border-white/10 bg-slate-950/60 px-3 py-1 text-xs text-slate-300"
-                        >
-                          {file.name}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </label>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-slate-200">Timezone</span>
+            {showSettings && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-800 text-sm">Google Calendar Setup</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowSettings(false)}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Timezone</label>
                     <input
                       name="timezone"
-                      defaultValue="UTC"
-                      className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none ring-0 transition placeholder:text-slate-500 focus:border-cyan-300/60"
-                      placeholder="America/New_York"
+                      defaultValue={state.timezone || "UTC"}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="e.g. America/New_York"
                     />
-                  </label>
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-slate-200">Google Calendar ID</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Calendar ID</label>
                     <input
                       name="calendarId"
-                      className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none ring-0 transition placeholder:text-slate-500 focus:border-cyan-300/60"
-                      placeholder="primary or your-calendar-id@group.calendar.google.com"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="primary or custom ID"
                     />
-                  </label>
-                </div>
-
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-slate-200">Paste notes or raw event text</span>
-                  <textarea
-                    name="sourceText"
-                    rows={10}
-                    className="min-h-56 w-full rounded-[28px] border border-white/10 bg-slate-950/70 px-4 py-3 text-sm leading-6 text-white outline-none ring-0 transition placeholder:text-slate-500 focus:border-cyan-300/60"
-                    placeholder="Example: Team offsite on Thursday at 2pm in Melbourne, dinner at 7:30pm, and a design review next Tuesday morning."
-                  />
-                </label>
-
-                <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">Google sync</p>
-                      <h3 className="mt-2 text-lg font-semibold text-white">Connect your calendar</h3>
-                      <p className="mt-1 text-sm leading-6 text-slate-400">
-                        Paste a calendar ID and access token if you want the extracted events written straight to Google Calendar.
-                      </p>
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={pending}
-                      className="h-12 rounded-2xl bg-gradient-to-r from-cyan-300 to-blue-500 px-6 text-sm font-semibold text-slate-950 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {pending ? "Processing..." : "Extract & sync"}
-                    </button>
                   </div>
-
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-200">Calendar ID</span>
-                      <input
-                        name="calendarId"
-                        className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none ring-0 transition placeholder:text-slate-500 focus:border-cyan-300/60"
-                        placeholder="primary or your-calendar-id@group.calendar.google.com"
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-200">Access token</span>
-                      <input
-                        name="googleAccessToken"
-                        type="password"
-                        className="h-12 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none ring-0 transition placeholder:text-slate-500 focus:border-cyan-300/60"
-                        placeholder="Optional if GOOGLE_CALENDAR_ACCESS_TOKEN is set"
-                      />
-                    </label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Access Token</label>
+                    <input
+                      name="googleAccessToken"
+                      type="password"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="OAuth Access Token"
+                    />
                   </div>
-
-                  <p className="mt-4 text-xs leading-5 text-slate-500">
-                    This keeps the setup free and OSS-friendly: users can bring their own Google credentials, or leave the fields blank to extract only.
-                  </p>
-                </div>
-              </form>
-            </div>
-          </section>
-
-          <aside className="flex flex-col gap-6 px-6 py-8 sm:px-10 sm:py-10">
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.05] p-6">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">Run status</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-white">{state.status}</h2>
-                </div>
-                <div className="rounded-full border border-white/10 bg-slate-950/80 px-3 py-1 text-xs font-medium text-slate-300">
-                  {state.timezone || "UTC"}
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-6 text-slate-300">{state.message}</p>
-              {state.summary ? (
-                <p className="mt-4 rounded-2xl border border-white/10 bg-slate-950/70 p-4 text-sm leading-6 text-slate-300">
-                  {state.summary}
-                </p>
-              ) : null}
+            )}
+          </div>
+        </header>
+
+        {/* Unified Input / Upload Bar */}
+        <section
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={handleDrop}
+          className="relative rounded-2xl border border-slate-200 bg-white p-2.5 shadow-md transition-all hover:border-blue-200 hover:shadow-lg focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+        >
+          <textarea
+            name="sourceText"
+            rows={4}
+            className="w-full resize-none border-0 bg-transparent px-3.5 py-3 text-[15px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none ring-0"
+            placeholder="Paste raw event details here, or drop image files anywhere on this box..."
+          />
+
+          {/* Files Selected Row */}
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-3 pb-3">
+              {files.map((file, idx) => (
+                <div
+                  key={`${file.name}-${file.lastModified}`}
+                  className="flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-100 py-1 pl-3 pr-2 text-xs font-medium text-blue-600"
+                >
+                  <span className="max-w-40 truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(idx)}
+                    className="rounded-full p-0.5 hover:bg-blue-100 text-blue-500 hover:text-blue-700"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Action Row */}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 px-1.5">
+            <div className="flex items-center gap-1">
+              <label className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-50 hover:text-blue-600">
+                <input
+                  ref={inputRef}
+                  id="images"
+                  name="images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="sr-only"
+                  onChange={handleFileChange}
+                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-image"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2.18" ry="2.18" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </svg>
+              </label>
+              <span className="text-xs text-slate-400 hidden sm:inline">Up to 3 images</span>
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.05] p-6">
-              <h3 className="text-lg font-semibold text-white">Extracted events</h3>
-              <div className="mt-4 space-y-3">
-                {state.extractedEvents.length > 0 ? (
-                  state.extractedEvents.map((event) => (
+            <button
+              type="submit"
+              disabled={pending}
+              className="flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 active:scale-98"
+            >
+              {pending ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Syncing...</span>
+                </>
+              ) : (
+                <>
+                  <span>Extract & Sync</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-arrow-right"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+          </div>
+        </section>
+
+        {/* Results Panel */}
+        {state.status !== "idle" && (
+          <section className="mt-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            {/* Status Alert */}
+            <div
+              className={`rounded-xl border p-4 flex gap-3 text-sm ${
+                state.status === "success"
+                  ? "bg-blue-50 border-blue-200 text-blue-800"
+                  : "bg-red-50 border-red-200 text-red-800"
+              }`}
+            >
+              {state.status === "success" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600 flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600 flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+              )}
+              <div className="space-y-1">
+                <p className="font-semibold">{state.status === "success" ? "Events Extracted Successfully" : "Error Occurred"}</p>
+                <p className="text-slate-600 text-xs leading-relaxed">{state.message}</p>
+              </div>
+            </div>
+
+            {/* Extracted Events */}
+            <div className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Extracted Events</h2>
+              {state.extractedEvents.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {state.extractedEvents.map((event) => (
                     <article
                       key={`${event.title}-${event.start}`}
-                      className="rounded-2xl border border-white/10 bg-slate-950/60 p-4"
+                      className="rounded-xl border border-slate-200 bg-white p-4.5 shadow-sm transition hover:shadow-md"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="font-medium text-white">{event.title}</h4>
-                          <p className="mt-1 text-sm text-slate-400">{event.start}</p>
-                        </div>
-                        <span className="rounded-full border border-white/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
-                          {Math.round(event.confidence * 100)}%
+                        <h3 className="font-bold text-slate-800 text-[15px]">{event.title}</h3>
+                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
+                          {Math.round(event.confidence * 100)}% Match
                         </span>
                       </div>
-                      {event.location ? <p className="mt-3 text-sm text-slate-300">{event.location}</p> : null}
-                      {event.notes ? <p className="mt-2 text-sm leading-6 text-slate-400">{event.notes}</p> : null}
+                      
+                      <div className="mt-3.5 space-y-2 text-xs text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                          <span>{event.start}</span>
+                        </div>
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span className="truncate">{event.location}</span>
+                          </div>
+                        )}
+                        {event.notes && (
+                          <p className="mt-2 text-slate-500 leading-normal border-t border-slate-100 pt-2 text-[11px]">
+                            {event.notes}
+                          </p>
+                        )}
+                      </div>
                     </article>
-                  ))
-                ) : (
-                  <p className="rounded-2xl border border-dashed border-white/10 bg-slate-950/50 p-4 text-sm leading-6 text-slate-400">
-                    No events yet. Submit a screenshot or note and the extracted schedule will appear here.
-                  </p>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-400">
+                  No events found in input.
+                </div>
+              )}
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.04] p-6">
-              <h3 className="text-lg font-semibold text-white">Synced events</h3>
-              <div className="mt-4 space-y-3">
-                {state.syncedEvents.length > 0 ? (
-                  state.syncedEvents.map((event) => (
+            {/* Synced Events */}
+            {state.syncedEvents.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Synced to Google Calendar</h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {state.syncedEvents.map((event) => (
                     <article
                       key={`${event.title}-${event.start}`}
-                      className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-100"
+                      className="rounded-xl border border-blue-200 bg-blue-50/40 p-4.5"
                     >
-                      <div className="font-medium text-white">{event.title}</div>
-                      <div className="mt-1 text-emerald-100/80">{event.start}</div>
-                      {event.htmlLink ? (
+                      <h3 className="font-bold text-slate-800 text-[15px]">{event.title}</h3>
+                      <p className="mt-1 text-xs text-slate-600">{event.start}</p>
+                      {event.htmlLink && (
                         <a
                           href={event.htmlLink}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100 underline decoration-emerald-200/60 underline-offset-4"
+                          className="mt-3.5 inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
                         >
-                          Open in Google Calendar
+                          <span>Open Calendar</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
                         </a>
-                      ) : null}
+                      )}
                     </article>
-                  ))
-                ) : (
-                  <p className="rounded-2xl border border-dashed border-white/10 bg-slate-950/50 p-4 text-sm leading-6 text-slate-400">
-                    Synced events will show up here once a Google token and calendar ID are provided.
-                  </p>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
-          </aside>
-        </div>
-      </div>
+            )}
+          </section>
+        )}
+      </form>
     </main>
   );
 }
+
