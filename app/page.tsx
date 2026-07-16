@@ -120,6 +120,19 @@ export default function Home() {
     };
   }, [showSettings]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setShowSettings(false);
+        setShowInfoModal(false);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   const syncFiles = (nextFiles: File[]) => {
     const limited = nextFiles.slice(0, 3);
     setFiles(limited);
@@ -637,6 +650,14 @@ export default function Home() {
                     onChange={(e) =>
                       setHasInputText(e.target.value.trim().length > 0)
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (e.currentTarget.value.trim().length > 0) {
+                          e.currentTarget.form?.requestSubmit();
+                        }
+                      }
+                    }}
                     className="w-full resize-none border-0 bg-transparent px-3.5 py-3 text-[15px] leading-relaxed text-slate-200 placeholder:text-slate-500 outline-none ring-0 focus:outline-none focus:ring-0"
                     placeholder="Paste raw event details here, or drop image files anywhere on this box..."
                   />
@@ -804,8 +825,14 @@ export default function Home() {
 
       {/* Info Modal Dialog */}
       {showInfoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl border border-card-border bg-slate-900 p-6 shadow-2xl max-h-[85vh] overflow-y-auto animate-in scale-in duration-200">
+        <div
+          onClick={() => setShowInfoModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg rounded-2xl border border-card-border bg-slate-900 p-6 shadow-2xl max-h-[85vh] overflow-y-auto animate-in scale-in duration-200"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <svg
