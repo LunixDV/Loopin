@@ -18,6 +18,8 @@ export default function Home() {
   const [state, formAction, pending] = useActionState(ingestEvents, initialState);
   const [files, setFiles] = useState<File[]>([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [tier, setTier] = useState<"free" | "paid">("free");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const syncFiles = (nextFiles: File[]) => {
@@ -90,8 +92,9 @@ export default function Home() {
 
               {showSettings && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-5 shadow-xl">
+                  {/* Title & Close */}
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 className="font-semibold text-slate-800 text-sm">Google Calendar Setup</h3>
+                    <h3 className="font-semibold text-slate-800 text-sm">Connection Config</h3>
                     <button
                       type="button"
                       onClick={() => setShowSettings(false)}
@@ -100,34 +103,89 @@ export default function Home() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
                   </div>
-                  <div className="space-y-4 pt-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Timezone</label>
-                      <input
-                        name="timezone"
-                        defaultValue={state.timezone || "UTC"}
-                        className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="e.g. America/New_York"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Calendar ID</label>
-                      <input
-                        name="calendarId"
-                        className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="primary or custom ID"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Access Token</label>
-                      <input
-                        name="googleAccessToken"
-                        type="password"
-                        className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        placeholder="OAuth Access Token"
-                      />
-                    </div>
+
+                  {/* Tier Tabs */}
+                  <div className="flex bg-slate-50 border border-slate-200/60 rounded-lg p-1 mt-3.5 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setTier("free")}
+                      className={`flex-1 text-center py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                        tier === "free"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      Free Tier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTier("paid")}
+                      className={`flex-1 text-center py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1 ${
+                        tier === "paid"
+                          ? "bg-white text-blue-600 shadow-sm"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      <span>Paid Tier</span>
+                      <span className="bg-blue-50 text-blue-700 text-[9px] px-1 rounded-full font-bold">$5</span>
+                    </button>
                   </div>
+
+                  {tier === "free" ? (
+                    <div className="space-y-3.5">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Groq API Key *</label>
+                        <input
+                          name="groqApiKey"
+                          type="password"
+                          required
+                          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          placeholder="gsk_..."
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Timezone</label>
+                        <input
+                          name="timezone"
+                          defaultValue={state.timezone || "UTC"}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          placeholder="e.g. America/New_York"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Calendar ID</label>
+                        <input
+                          name="calendarId"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          placeholder="primary or custom ID"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Access Token</label>
+                        <input
+                          name="googleAccessToken"
+                          type="password"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          placeholder="OAuth Access Token"
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400 leading-normal">
+                        * Required to extract events. Calendar ID & Token only needed to sync.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="py-4 text-center space-y-3">
+                      <div className="mx-auto h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-slate-800 text-xs">Paid Tier is Locked</h4>
+                        <p className="text-[10px] text-slate-500 leading-relaxed px-2">
+                          Managed key extraction, Stripe billing, and Google Sign-in direct authentication are pending setup.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -158,7 +216,7 @@ export default function Home() {
                 <div className="space-y-2">
                   <h1 className="text-xl font-bold text-slate-800 tracking-tight">Sync events in seconds</h1>
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    {state.message || "Drop calendar images or paste notes at the bottom to instantly extract and sync events."}
+                    {state.message || "Configure your Groq key in settings, then drop screenshots or paste notes below to instantly sync calendar events."}
                   </p>
                 </div>
               </div>
@@ -369,7 +427,119 @@ export default function Home() {
           </div>
         </div>
       </form>
+
+      {/* Floating Action Button (FAB) with Info Icon */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          type="button"
+          onClick={() => setShowInfoModal(true)}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 hover:scale-105 active:scale-95 cursor-pointer"
+          title="How to get API keys"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Info Modal Dialog */}
+      {showInfoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-h-[85vh] overflow-y-auto animate-in scale-in duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#2563eb"
+                  strokeWidth="2.5"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+                <h2 className="text-lg font-bold text-slate-800">Free Tier API Setup Guide</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInfoModal(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer rounded-full p-1 hover:bg-slate-100"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-6 text-sm text-slate-600">
+              <section className="space-y-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-600">1</span>
+                  Get a Groq API Key
+                </h3>
+                <p className="leading-relaxed pl-6">
+                  Loopin uses Groq for fast AI parsing. Go to the <a href="https://console.groq.com/" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-0.5 font-medium cursor-pointer">Groq Console<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline ml-0.5"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>, create an API key, and paste it into the <b>Groq API Key</b> field in the Connect settings.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-600">2</span>
+                  Find Google Calendar ID
+                </h3>
+                <p className="leading-relaxed pl-6">
+                  Open <a href="https://calendar.google.com/" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-0.5 font-medium cursor-pointer">Google Calendar<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline ml-0.5"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>. In the left panel, hover over your calendar, click the three dots, and select <b>Settings and sharing</b>. Scroll down to the <b>Integrate calendar</b> section and copy the <b>Calendar ID</b> (e.g. your email address for primary).
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-600">3</span>
+                  Generate Google Access Token
+                </h3>
+                <div className="leading-relaxed pl-6 space-y-2">
+                  <p>
+                    To authorize syncing without full auth configuration, you can use the Google OAuth Playground:
+                  </p>
+                  <ol className="list-decimal pl-4 space-y-1 text-xs">
+                    <li>Go to <a href="https://developers.google.com/oauthplayground/" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-0.5 font-medium cursor-pointer">Google OAuth Playground<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline ml-0.5"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>.</li>
+                    <li>Under <b>Select & authorize APIs</b>, scroll to <b>Google Calendar API v3</b> and expand it.</li>
+                    <li>Select the scope: <code>https://www.googleapis.com/auth/calendar</code>.</li>
+                    <li>Click <b>Authorize APIs</b>, choose your Google account, and grant access.</li>
+                    <li>In Step 2, click <b>Exchange authorization code for tokens</b>.</li>
+                    <li>Copy the <b>Access Token</b> value and paste it into the settings panel.</li>
+                  </ol>
+                </div>
+              </section>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowInfoModal(false)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 active:scale-95 cursor-pointer"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
+
 

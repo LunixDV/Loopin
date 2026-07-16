@@ -7,12 +7,12 @@ import {
   type ExtractedEvent,
 } from "./event-types";
 
-const groqClient = () => {
-  const apiKey = process.env.GROQ_API_KEY;
+const groqClient = (customApiKey?: string) => {
+  const apiKey = customApiKey || process.env.GROQ_API_KEY;
 
   if (!apiKey) {
     throw new Error(
-      "Missing GROQ_API_KEY. Add it to your environment before extracting events.",
+      "Missing Groq API Key. Please configure your key in settings.",
     );
   }
 
@@ -92,8 +92,9 @@ export async function extractEventsFromInput(params: {
   text: string;
   timezone: string;
   files: File[];
+  groqApiKey?: string;
 }): Promise<ExtractionResult> {
-  const client = groqClient();
+  const client = groqClient(params.groqApiKey);
   const imageInputs = await Promise.all(
     params.files.slice(0, 3).map(async (file) => ({
       type: "input_image" as const,

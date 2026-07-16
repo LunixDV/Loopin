@@ -32,6 +32,7 @@ export async function ingestEvents(
     asString(formData.get("googleAccessToken")).trim() ||
     process.env.GOOGLE_CALENDAR_ACCESS_TOKEN?.trim() ||
     "";
+  const groqApiKey = asString(formData.get("groqApiKey")).trim();
   const files = formData
     .getAll("images")
     .filter((value): value is File => value instanceof File && value.size > 0)
@@ -51,6 +52,7 @@ export async function ingestEvents(
       text,
       timezone,
       files,
+      groqApiKey,
     });
 
     let syncedEvents: AppState["syncedEvents"] = [];
