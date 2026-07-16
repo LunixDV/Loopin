@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1e293b;
-  --primary-blue: #2563eb;
-  --light-blue: #f0f5ff;
-  --border-blue: #bfdbfe;
+  --background: #090b11;
+  --foreground: #f1f5f9;
+  --primary-blue: #6366f1; /* Indigo primary */
+  --light-blue: rgba(99, 102, 241, 0.1);
+  --border-blue: rgba(99, 102, 241, 0.25);
+
+  --card-bg: rgba(15, 23, 42, 0.65);
+  --card-border: rgba(99, 102, 241, 0.15);
+  --card-border-hover: rgba(99, 102, 241, 0.4);
 }
 
 @theme inline {
@@ -14,8 +18,42 @@
   --color-primary-blue: var(--primary-blue);
   --color-light-blue: var(--light-blue);
   --color-border-blue: var(--border-blue);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-card-border-hover: var(--card-border-hover);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
+
+@keyframes float-slow-1 {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+@keyframes float-slow-2 {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1.05);
+  }
+  50% {
+    transform: translate(-40px, 40px) scale(0.9);
+  }
+}
+
+.animate-ambient-1 {
+  animation: float-slow-1 25s infinite ease-in-out;
+}
+
+.animate-ambient-2 {
+  animation: float-slow-2 20s infinite ease-in-out;
 }
 
 * {
@@ -31,7 +69,7 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -40,4 +78,3 @@ body {
   background: rgba(37, 99, 235, 0.15);
   color: var(--primary-blue);
 }
-

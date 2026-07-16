@@ -22,12 +22,15 @@ const groqClient = (customApiKey?: string) => {
   });
 };
 
-const stripMarkdownFence = (value: string) =>
-  value.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+export const stripMarkdownFence = (value: string) =>
+  value
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
 
-const isDateOnly = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+export const isDateOnly = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
 
-const addMinutes = (value: string, minutes: number) => {
+export const addMinutes = (value: string, minutes: number) => {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -38,7 +41,7 @@ const addMinutes = (value: string, minutes: number) => {
   return date.toISOString();
 };
 
-const addDaysToDateOnly = (value: string, days: number) => {
+export const addDaysToDateOnly = (value: string, days: number) => {
   const date = new Date(`${value}T00:00:00Z`);
 
   if (Number.isNaN(date.getTime())) {
@@ -134,14 +137,18 @@ export async function extractEventsFromInput(params: {
   };
 }
 
-const normalizeCalendarEvent = (event: ExtractedEvent, timezone: string) => {
+export const normalizeCalendarEvent = (
+  event: ExtractedEvent,
+  timezone: string,
+) => {
   if (event.allDay || isDateOnly(event.start)) {
     const startDate = isDateOnly(event.start)
       ? event.start
       : new Date(event.start).toISOString().slice(0, 10);
-    const endDate = event.end && isDateOnly(event.end)
-      ? event.end
-      : addDaysToDateOnly(startDate, 1);
+    const endDate =
+      event.end && isDateOnly(event.end)
+        ? event.end
+        : addDaysToDateOnly(startDate, 1);
 
     return {
       start: { date: startDate },
@@ -150,7 +157,9 @@ const normalizeCalendarEvent = (event: ExtractedEvent, timezone: string) => {
   }
 
   const startDateTime = new Date(event.start).toISOString();
-  const endDateTime = event.end ? new Date(event.end).toISOString() : addMinutes(startDateTime, 60);
+  const endDateTime = event.end
+    ? new Date(event.end).toISOString()
+    : addMinutes(startDateTime, 60);
 
   return {
     start: { dateTime: startDateTime, timeZone: timezone },
@@ -199,8 +208,12 @@ export async function syncEventsToGoogleCalendar(params: {
     }
 
     const created = (await response.json()) as { htmlLink?: string };
-    const start = "date" in normalized.start ? normalized.start.date : normalized.start.dateTime;
-    const end = "date" in normalized.end ? normalized.end.date : normalized.end.dateTime;
+    const start =
+      "date" in normalized.start
+        ? normalized.start.date
+        : normalized.start.dateTime;
+    const end =
+      "date" in normalized.end ? normalized.end.date : normalized.end.dateTime;
 
     synced.push({
       title: event.title,
