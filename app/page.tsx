@@ -39,6 +39,7 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const filesRef = useRef<File[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -136,6 +137,7 @@ export default function Home() {
   const syncFiles = (nextFiles: File[]) => {
     const limited = nextFiles.slice(0, 3);
     setFiles(limited);
+    filesRef.current = limited;
 
     if (inputRef.current) {
       const transfer = new DataTransfer();
@@ -143,6 +145,29 @@ export default function Home() {
       inputRef.current.files = transfer.files;
     }
   };
+
+  useEffect(() => {
+    function handlePaste(event: ClipboardEvent) {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      const pastedImages: File[] = [];
+      for (const item of items) {
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) pastedImages.push(file);
+        }
+      }
+
+      if (pastedImages.length > 0) {
+        event.preventDefault();
+        syncFiles([...filesRef.current, ...pastedImages]);
+      }
+    }
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, []);
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -659,7 +684,7 @@ export default function Home() {
                       }
                     }}
                     className="w-full resize-none border-0 bg-transparent px-3.5 py-3 text-[15px] leading-relaxed text-slate-200 placeholder:text-slate-500 outline-none ring-0 focus:outline-none focus:ring-0"
-                    placeholder="Paste raw event details here, or drop image files anywhere on this box..."
+                    placeholder="Paste raw event details or an image here, or drop image files anywhere on this box..."
                   />
 
                   {/* Files Selected Row */}

@@ -100,20 +100,23 @@ export async function extractEventsFromInput(params: {
   const client = groqClient(params.groqApiKey);
   const imageInputs = await Promise.all(
     params.files.slice(0, 3).map(async (file) => ({
-      type: "input_image" as const,
-      image_url: await fileToDataUrl(file),
-      detail: "auto" as const,
+      type: "image_url" as const,
+      image_url: { url: await fileToDataUrl(file) },
     })),
   );
 
-  const response = await client.responses.create({
-    model: "openai/gpt-oss-20b",
-    input: [
+  const hasImages = imageInputs.length > 0;
+
+  const response = await client.chat.completions.create({
+    model: hasImages
+      ? "meta-llama/llama-4-scout-17b-16e-instruct"
+      : "openai/gpt-oss-20b",
+    messages: [
       {
         role: "user",
         content: [
           {
-            type: "input_text",
+            type: "text",
             text: buildPrompt(params.text, params.timezone),
           },
           ...imageInputs,
@@ -123,8 +126,14 @@ export async function extractEventsFromInput(params: {
     temperature: 0,
   });
 
+  const content = response.choices[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("Groq returned an empty response.");
+  }
+
   const parsed = extractionResultSchema.parse(
-    JSON.parse(stripMarkdownFence(response.output_text)),
+    JSON.parse(stripMarkdownFence(content)),
   );
 
   return {
