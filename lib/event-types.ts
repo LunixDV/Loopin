@@ -37,6 +37,7 @@ export const rawExtractionResultSchema = z.object({
 
 export type ExtractedEvent = z.infer<typeof extractedEventSchema>;
 export type ExtractionResult = z.infer<typeof extractionResultSchema>;
+export type EvaluatedEvent = ExtractedEvent & { isPast: boolean };
 
 export type CalendarSyncResult = {
   title: string;
@@ -50,6 +51,6 @@ export type AppState = {
   message: string;
   summary: string;
   timezone: string;
-  extractedEvents: ExtractedEvent[];
+  extractedEvents: EvaluatedEvent[];
   syncedEvents: CalendarSyncResult[];
 };

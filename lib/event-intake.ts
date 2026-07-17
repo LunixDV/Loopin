@@ -161,6 +161,26 @@ export async function extractEventsFromInput(params: {
   };
 }
 
+export const isEventPast = (
+  event: ExtractedEvent,
+  referenceDate: Date = new Date(),
+): boolean => {
+  const effectiveEnd = event.end || event.start;
+
+  if (event.allDay || isDateOnly(effectiveEnd)) {
+    const endDate = isDateOnly(effectiveEnd)
+      ? effectiveEnd
+      : new Date(effectiveEnd).toISOString().slice(0, 10);
+    const endOfDay = new Date(`${endDate}T23:59:59.999Z`);
+
+    return !Number.isNaN(endOfDay.getTime()) && endOfDay < referenceDate;
+  }
+
+  const endTime = new Date(effectiveEnd);
+
+  return !Number.isNaN(endTime.getTime()) && endTime < referenceDate;
+};
+
 export const normalizeCalendarEvent = (
   event: ExtractedEvent,
   timezone: string,

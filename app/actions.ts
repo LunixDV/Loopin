@@ -2,6 +2,7 @@
 
 import {
   extractEventsFromInput,
+  isEventPast,
   syncEventsToGoogleCalendar,
 } from "@/lib/event-intake";
 import type { AppState } from "@/lib/event-types";
@@ -55,16 +56,28 @@ export async function ingestEvents(
       groqApiKey,
     });
 
+    const now = new Date();
+    const evaluatedEvents = extraction.events.map((event) => ({
+      ...event,
+      isPast: isEventPast(event, now),
+    }));
+    const upcomingEvents = evaluatedEvents.filter((event) => !event.isPast);
+    const pastCount = evaluatedEvents.length - upcomingEvents.length;
+
     let syncedEvents: AppState["syncedEvents"] = [];
     if (calendarId && accessToken) {
       syncedEvents = await syncEventsToGoogleCalendar({
-        events: extraction.events,
+        events: upcomingEvents,
         timezone: extraction.timezone,
         calendarId,
         accessToken,
       });
     }
 
+    const pastMessage =
+      pastCount > 0
+        ? ` Skipped ${pastCount} event${pastCount === 1 ? "" : "s"} because the deadline has passed.`
+        : "";
     const syncMessage =
       calendarId && accessToken
         ? ` Synced ${syncedEvents.length} event${syncedEvents.length === 1 ? "" : "s"} to Google Calendar.`
@@ -72,10 +85,10 @@ export async function ingestEvents(
 
     return {
       status: "success",
-      message: `Extracted ${extraction.events.length} event${extraction.events.length === 1 ? "" : "s"}.${syncMessage}`,
+      message: `Extracted ${extraction.events.length} event${extraction.events.length === 1 ? "" : "s"}.${syncMessage}${pastMessage}`,
       summary: extraction.summary,
       timezone: extraction.timezone,
-      extractedEvents: extraction.events,
+      extractedEvents: evaluatedEvents,
       syncedEvents,
     };
   } catch (error) {

@@ -540,15 +540,25 @@ export default function Home() {
                     {state.extractedEvents.map((event) => (
                       <article
                         key={`${event.title}-${event.start}`}
-                        className="rounded-xl border border-card-border bg-card-bg backdrop-blur-md p-4.5 shadow-sm transition-all duration-300 hover:shadow-md hover:border-card-border-hover"
+                        className={`rounded-xl border p-4.5 shadow-sm backdrop-blur-md transition-all duration-300 ${
+                          event.isPast
+                            ? "border-red-500/20 bg-red-950/10 opacity-75"
+                            : "border-card-border bg-card-bg hover:shadow-md hover:border-card-border-hover"
+                        }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <h3 className="font-bold text-slate-200 text-[15px] font-display">
                             {event.title}
                           </h3>
-                          <span className="rounded-full bg-indigo-950/50 border border-indigo-500/20 px-2 py-0.5 text-[10px] font-bold text-indigo-400">
-                            {Math.round(event.confidence * 100)}% Match
-                          </span>
+                          {event.isPast ? (
+                            <span className="rounded-full bg-red-950/50 border border-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400 whitespace-nowrap">
+                              Deadline passed
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-indigo-950/50 border border-indigo-500/20 px-2 py-0.5 text-[10px] font-bold text-indigo-400 whitespace-nowrap">
+                              {Math.round(event.confidence * 100)}% Match
+                            </span>
+                          )}
                         </div>
 
                         <div className="mt-3.5 space-y-2 text-xs text-slate-400">
