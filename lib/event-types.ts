@@ -16,6 +16,25 @@ export const extractionResultSchema = z.object({
   events: z.array(extractedEventSchema),
 });
 
+// Lenient shape for raw model output, which sometimes returns null for
+// fields it couldn't confidently extract. Events failing to meet the
+// stricter extractedEventSchema are dropped rather than failing the batch.
+export const rawExtractedEventSchema = z.object({
+  title: z.string().nullable().optional(),
+  start: z.string().nullable().optional(),
+  end: z.string().nullable().optional(),
+  allDay: z.boolean().nullable().optional(),
+  location: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  confidence: z.number().nullable().optional(),
+});
+
+export const rawExtractionResultSchema = z.object({
+  summary: z.string().min(1),
+  timezone: z.string().min(1),
+  events: z.array(rawExtractedEventSchema),
+});
+
 export type ExtractedEvent = z.infer<typeof extractedEventSchema>;
 export type ExtractionResult = z.infer<typeof extractionResultSchema>;
 

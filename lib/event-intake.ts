@@ -1,7 +1,8 @@
 import OpenAI from "openai";
 
 import {
-  extractionResultSchema,
+  extractedEventSchema,
+  rawExtractionResultSchema,
   type CalendarSyncResult,
   type ExtractionResult,
   type ExtractedEvent,
@@ -86,6 +87,9 @@ Rules:
 - Keep confidence between 0 and 1.
 - Put any uncertainty in the notes field.
 - The timezone to use is ${timezone}.
+- Every event MUST have a non-null "title" and "start". If you cannot
+  determine a start date/time for something, omit that event entirely
+  rather than including it with a null or empty start.
 
 Input:
 ${inputText}
@@ -132,17 +136,28 @@ export async function extractEventsFromInput(params: {
     throw new Error("Groq returned an empty response.");
   }
 
-  const parsed = extractionResultSchema.parse(
+  const rawParsed = rawExtractionResultSchema.parse(
     JSON.parse(stripMarkdownFence(content)),
   );
 
-  return {
-    ...parsed,
-    events: parsed.events.map((event) => ({
+  const events = rawParsed.events.flatMap((event) => {
+    const result = extractedEventSchema.safeParse({
       ...event,
-      notes: event.notes ?? "",
+      title: event.title ?? "",
+      start: event.start ?? "",
       location: event.location ?? "",
-    })),
+      notes: event.notes ?? "",
+      allDay: event.allDay ?? undefined,
+      confidence: event.confidence ?? undefined,
+    });
+
+    return result.success ? [result.data] : [];
+  });
+
+  return {
+    summary: rawParsed.summary,
+    timezone: rawParsed.timezone,
+    events,
   };
 }
 
